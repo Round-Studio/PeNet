@@ -183,7 +183,10 @@ namespace PeNet
 
             return true;
         }
-
+        public void Flush()
+        {
+            RawFile.Flush();
+        }
         /// <summary>
         ///     Returns true if the DLL flag in the
         ///     File Header is set.

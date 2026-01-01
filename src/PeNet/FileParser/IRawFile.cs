@@ -123,5 +123,14 @@ namespace PeNet.FileParser
         /// <param name="bytes">Bytes to append.</param>
         /// <returns>Raw start address of the appended bytes.</returns>
         int AppendBytes(Span<byte> bytes);
+
+        /// <summary>
+        /// Clears all buffers for the current writer and causes any buffered data to be written to the underlying
+        /// device.
+        /// </summary>
+        /// <remarks>Call this method to ensure that all buffered output is sent to the underlying storage
+        /// or stream. This is typically used to prevent data loss in scenarios where buffered data must be persisted
+        /// immediately.</remarks>
+        void Flush(){}
     }
 }

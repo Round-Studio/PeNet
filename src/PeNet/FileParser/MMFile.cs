@@ -11,25 +11,89 @@ namespace PeNet.FileParser
     /// </summary>
     public unsafe class MMFile : IRawFile, IDisposable
     {
+        private const int DefaultBufferSize = 65536; 
         private const int MaxStackAlloc = 1024;
-        private readonly MemoryMappedFile _mmf;
-        private readonly MemoryMappedViewAccessor _va;
-        private readonly byte* ptr;
+        private  MemoryMappedFile _mmf;
+        private  MemoryMappedViewAccessor _va;
+        private  byte* ptr;
+        private MemoryStream _appendBuffer;
+        private readonly object _bufferLock = new object();
+        private long _logicalLength; 
+        private long _physicalLength;
+        private string _filePath;
 
         public MMFile(string file)
         {
+			_filePath = file;
+            var fileInfo = new FileInfo(file);
+            _physicalLength = fileInfo.Length;
+            _logicalLength = _physicalLength;
+
             _mmf = MemoryMappedFile.CreateFromFile(file, FileMode.Open);
             _va = _mmf.CreateViewAccessor();
             _va.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
-            Length = new FileInfo(file).Length;
-        }
+
+            _appendBuffer = new MemoryStream(DefaultBufferSize);
+            Length = _logicalLength;
+        }      
 
         public long Length { private set; get; }
 
-        public int AppendBytes(Span<byte> bytes)
+		public int AppendBytes(Span<byte> bytes)
         {
-            throw new NotImplementedException("This features is not available for memory mapped files.");
+            lock (_bufferLock)
+            {
+                int position = (int)_appendBuffer.Position;
+
+                _appendBuffer.Write(bytes);
+
+               
+                _logicalLength += bytes.Length;
+                Length = _logicalLength;
+
+                if (_appendBuffer.Length >= DefaultBufferSize)
+                {
+                    FlushBuffer();
+                }
+
+                return (int)(_physicalLength + position);
+            }
         }
+        public void FlushBuffer()
+        {
+            lock (_bufferLock)
+            {
+                if (_appendBuffer.Length == 0)
+                    return;
+
+                var bufferData = _appendBuffer.ToArray();
+                _appendBuffer.SetLength(0); 
+
+         
+                var newPhysicalLength = _physicalLength + bufferData.Length;
+
+       
+                _va.SafeMemoryMappedViewHandle.ReleasePointer();
+                _va.Dispose();
+                _mmf.Dispose();
+
+              
+                using (var fileStream = new FileStream(_filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                {
+                    fileStream.Seek(_physicalLength, SeekOrigin.Begin);
+                    fileStream.Write(bufferData, 0, bufferData.Length);
+                    fileStream.SetLength(newPhysicalLength); 
+                }
+
+
+                _physicalLength = newPhysicalLength;
+
+                _mmf = MemoryMappedFile.CreateFromFile(_filePath, FileMode.Open);
+                _va = _mmf.CreateViewAccessor();
+                _va.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
+            }
+        }
+
 
         public Span<byte> AsSpan(long offset, long length)
         {
@@ -76,6 +140,11 @@ namespace PeNet.FileParser
 #else
             return new string(tmp);
 #endif
+        }
+
+        public void Flush()
+        {
+            
         }
 
         public byte ReadByte(long offset)
