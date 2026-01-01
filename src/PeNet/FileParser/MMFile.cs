@@ -144,7 +144,7 @@ namespace PeNet.FileParser
 
         public void Flush()
         {
-            
+            FlushBuffer();
         }
 
         public byte ReadByte(long offset)

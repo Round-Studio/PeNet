@@ -188,6 +188,11 @@ namespace PeNet.FileParser
             _stream.Dispose();
         }
 
+        public void Flush()
+        {
+            _stream.Flush();
+        }
+
         public void RemoveRange(long offset, long length)
         {
             var _buff = this.ToArray();
@@ -199,7 +204,18 @@ namespace PeNet.FileParser
 
         public int AppendBytes(Span<byte> bytes)
         {
-            throw new NotImplementedException("This features is not available for stream files.");
+
+            if (!_stream.CanWrite)
+                throw new NotSupportedException("The stream does not support writing.");
+
+   
+            _stream.Seek(0, SeekOrigin.End);
+            var appendPosition = (int)_stream.Position;
+
+ 
+            _stream.Write(bytes);
+
+            return appendPosition;
         }
-    }
+	}
 }

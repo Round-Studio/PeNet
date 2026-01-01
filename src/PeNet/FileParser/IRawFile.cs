@@ -2,7 +2,7 @@
 
 namespace PeNet.FileParser
 {
-    public interface IRawFile
+    public interface IRawFile : IDisposable
     {
         /// <summary>
         /// Read a byte at the given offset.

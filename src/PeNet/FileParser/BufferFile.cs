@@ -76,7 +76,12 @@ namespace PeNet.FileParser
 
             return oldLength;
         }
-    }
+
+		public void Dispose()
+		{
+			
+		}
+	}
 #else
     public unsafe class BufferFile : IRawFile
     {

@@ -20,7 +20,7 @@ namespace PeNet
     ///     This class represents a Portable Executable (PE) file and makes the different
     ///     header and properties accessible.
     /// </summary>
-    public partial class PeFile
+    public partial class PeFile : IDisposable
     {
         private readonly DataDirectoryParsers? _dataDirectoryParsers;
         private readonly NativeStructureParsers _nativeStructureParsers;
@@ -589,6 +589,12 @@ namespace PeNet
                 return false;
 
             return buf[1] == 0x5a && buf[0] == 0x4d; // MZ Header
+        }
+
+
+        public void Dispose()
+        {
+            RawFile.Dispose();
         }
     }
 }

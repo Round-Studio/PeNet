@@ -8,6 +8,18 @@ namespace PeNet.Test.FileParser
     public class MMFileTest
     {
         [Fact]
+        public void Test()
+        {
+            string file_path = Path.Combine(@"D:\Windows11\newdesk\Code\bedrock_versions\1.21.12302", "Minecraft.Windows.exe");
+            
+			using (PeFile pe = new PeFile(File.Open(file_path,FileMode.OpenOrCreate,FileAccess.ReadWrite)))
+            {
+                pe.AddImport("1.dll","funcv");
+                pe.Flush();
+            }
+
+        }
+        [Fact]
         public void Length_ReturnsCorrectLength()
         {
             using var mmf = new MMFile(@"Binaries/firefox_x86.exe");
