@@ -3,127 +3,121 @@ using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
-namespace PeNet.Header.Authenticode
+namespace PeNet.Header.Authenticode;
+
+/// <summary>
+///     This class parses the Certificate Revocation Lists
+///     of a signing certificate. It provides access to all
+///     CRL URLs in the certificate.
+/// </summary>
+public class CrlUrlList
 {
     /// <summary>
-    ///     This class parses the Certificate Revocation Lists
-    ///     of a signing certificate. It provides access to all
-    ///     CRL URLs in the certificate.
+    ///     Create a new CrlUrlList object.
     /// </summary>
-    public class CrlUrlList
+    /// <param name="rawData">A byte array containing a X509 certificate</param>
+    public CrlUrlList(byte[] rawData)
     {
-        /// <summary>
-        ///     Create a new CrlUrlList object.
-        /// </summary>
-        /// <param name="rawData">A byte array containing a X509 certificate</param>
-        public CrlUrlList(byte[] rawData)
-        {
-            Urls = new List<string>();
+        Urls = new List<string>();
 
-            if (rawData == null)
-                return;
+        if (rawData == null)
+            return;
 
-            ParseCrls(rawData);
-        }
+        ParseCrls(rawData);
+    }
 
-        /// <summary>
-        ///     Create a new CrlUrlList object.
-        /// </summary>
-        /// <param name="cert">A X509 certificate object.</param>
-        public CrlUrlList(X509Certificate2 cert)
-        {
-            Urls = new List<string>();
+    /// <summary>
+    ///     Create a new CrlUrlList object.
+    /// </summary>
+    /// <param name="cert">A X509 certificate object.</param>
+    public CrlUrlList(X509Certificate2 cert)
+    {
+        Urls = new List<string>();
 
-            foreach (var ext in cert.Extensions)
-            {
-                if (ext.Oid?.Value == "2.5.29.31")
-                {
-                    ParseCrls(ext.RawData);
-                }
-            }
-        }
+        foreach (var ext in cert.Extensions)
+            if (ext.Oid?.Value == "2.5.29.31")
+                ParseCrls(ext.RawData);
+    }
 
-        /// <summary>
-        ///     List with all CRL URLs.
-        /// </summary>
-        public List<string> Urls { get; }
+    /// <summary>
+    ///     List with all CRL URLs.
+    /// </summary>
+    public List<string> Urls { get; }
 
-        private void ParseCrls(byte[] rawData)
-        {
-            var rawLength = rawData.Length;
-            for (var i = 0; i < rawLength - 5; i++)
-            {
-                // Find a HTTP(s) string.
-                if (rawData[i] == 'h'
-                    && rawData[i + 1] == 't'
-                    && rawData[i + 2] == 't'
-                    && rawData[i + 3] == 'p'
-                    && rawData[i + 4] == ':'
-                    || rawData[i] == 'l'
+    private void ParseCrls(byte[] rawData)
+    {
+        var rawLength = rawData.Length;
+        for (var i = 0; i < rawLength - 5; i++)
+            // Find a HTTP(s) string.
+            if ((rawData[i] == 'h'
+                 && rawData[i + 1] == 't'
+                 && rawData[i + 2] == 't'
+                 && rawData[i + 3] == 'p'
+                 && rawData[i + 4] == ':')
+                || (rawData[i] == 'l'
                     && rawData[i + 1] == 'd'
                     && rawData[i + 2] == 'a'
                     && rawData[i + 3] == 'p'
-                    && rawData[i + 4] == ':')
+                    && rawData[i + 4] == ':'))
+            {
+                var bytes = new List<byte>();
+                for (var j = i; j < rawLength; j++)
                 {
-                    var bytes = new List<byte>();
-                    for (var j = i; j < rawLength; j++)
-                    {
-                        if (rawData[j - 4] == '.'
-                            && rawData[j - 3] == 'c'
-                            && rawData[j - 2] == 'r'
-                            && rawData[j - 1] == 'l'
-                            || rawData[j] == 'b'
+                    if ((rawData[j - 4] == '.'
+                         && rawData[j - 3] == 'c'
+                         && rawData[j - 2] == 'r'
+                         && rawData[j - 1] == 'l')
+                        || (rawData[j] == 'b'
                             && rawData[j + 1] == 'a'
                             && rawData[j + 2] == 's'
-                            && rawData[j + 3] == 'e')
-                        {
-                            i = j;
-                            break;
-                        }
-
-
-                        if (rawData[j] < 0x20 || rawData[j] > 0x7E)
-                        {
-                            i = j;
-                            break;
-                        }
-
-                        bytes.Add(rawData[j]);
-                    }
-                    var uri = Encoding.ASCII.GetString(bytes.ToArray());
-
-                    if (IsValidUri(uri) && uri.StartsWith("http://") && uri.EndsWith(".crl"))
-                        Urls.Add(uri);
-
-                    if (uri.StartsWith("ldap:", StringComparison.InvariantCulture))
+                            && rawData[j + 3] == 'e'))
                     {
-                        uri = "ldap://" + uri.Split('/')[2];
-                        Urls.Add(uri);
+                        i = j;
+                        break;
                     }
+
+
+                    if (rawData[j] < 0x20 || rawData[j] > 0x7E)
+                    {
+                        i = j;
+                        break;
+                    }
+
+                    bytes.Add(rawData[j]);
+                }
+
+                var uri = Encoding.ASCII.GetString(bytes.ToArray());
+
+                if (IsValidUri(uri) && uri.StartsWith("http://") && uri.EndsWith(".crl"))
+                    Urls.Add(uri);
+
+                if (uri.StartsWith("ldap:", StringComparison.InvariantCulture))
+                {
+                    uri = "ldap://" + uri.Split('/')[2];
+                    Urls.Add(uri);
                 }
             }
-        }
+    }
 
-        private static bool IsValidUri(string uri)
-        {
-            return Uri.TryCreate(uri, UriKind.Absolute, out var uriResult)
-                   && (uriResult.Scheme == Uri.UriSchemeHttp
-                       || uriResult.Scheme == Uri.UriSchemeHttps);
-        }
+    private static bool IsValidUri(string uri)
+    {
+        return Uri.TryCreate(uri, UriKind.Absolute, out var uriResult)
+               && (uriResult.Scheme == Uri.UriSchemeHttp
+                   || uriResult.Scheme == Uri.UriSchemeHttps);
+    }
 
 
-        /// <summary>
-        ///     Create a string representation of all CRL in
-        ///     the list.
-        /// </summary>
-        /// <returns>CRL URLs.</returns>
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine("CRL URLs:");
-            foreach (var url in Urls)
-                sb.AppendFormat("\t{0}\n", url);
-            return sb.ToString();
-        }
+    /// <summary>
+    ///     Create a string representation of all CRL in
+    ///     the list.
+    /// </summary>
+    /// <returns>CRL URLs.</returns>
+    public override string ToString()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("CRL URLs:");
+        foreach (var url in Urls)
+            sb.AppendFormat("\t{0}\n", url);
+        return sb.ToString();
     }
 }

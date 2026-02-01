@@ -1,51 +1,50 @@
 ﻿using System;
 using PeNet.FileParser;
 
-namespace PeNet.HeaderParser
+namespace PeNet.HeaderParser;
+
+internal abstract class SafeParser<T>
+    where T : class
 {
-    internal abstract class SafeParser<T>
-        where T : class
+    protected readonly long Offset;
+    protected readonly IRawFile PeFile;
+    private bool _alreadyParsed;
+
+    private T? _target;
+
+    internal SafeParser(IRawFile peFile, long offset)
     {
-        protected readonly IRawFile PeFile;
-        protected readonly long Offset;
-        private bool _alreadyParsed;
+        PeFile = peFile;
+        Offset = offset;
+    }
 
-        private T? _target;
-
-        internal SafeParser(IRawFile peFile, long offset)
-        {
-            PeFile = peFile;
-            Offset = offset;
-        }
-
-        private bool SanityCheckFailed()
-        {
-            return Offset > PeFile?.Length;
-        }
+    private bool SanityCheckFailed()
+    {
+        return Offset > PeFile?.Length;
+    }
 
 
-        protected abstract T? ParseTarget();
+    protected abstract T? ParseTarget();
 
-        public T? GetParserTarget()
-        {
-            if (_alreadyParsed)
-                return _target;
-
-            _alreadyParsed = true;
-
-            if (SanityCheckFailed())
-                return null;
-
-            try
-            {
-                _target = ParseTarget();
-            }
-            catch (Exception)
-            {
-                _target = null;
-            }
-
+    public T? GetParserTarget()
+    {
+        if (_alreadyParsed)
             return _target;
+
+        _alreadyParsed = true;
+
+        if (SanityCheckFailed())
+            return null;
+
+        try
+        {
+            _target = ParseTarget();
         }
+        catch (Exception)
+        {
+            _target = null;
+        }
+
+        return _target;
     }
 }

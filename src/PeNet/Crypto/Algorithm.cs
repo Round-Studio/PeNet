@@ -1,9 +1,8 @@
-﻿namespace PeNet.Crypto
+﻿namespace PeNet.Crypto;
+
+internal enum Algorithm
 {
-    internal enum Algorithm
-    {
-        Md5,
-        Sha1,
-        Sha256
-    }
+    Md5,
+    Sha1,
+    Sha256
 }

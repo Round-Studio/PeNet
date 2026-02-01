@@ -1,63 +1,62 @@
 ﻿using PeNet.FileParser;
 using PeNet.Header.Pe;
 
-namespace PeNet.HeaderParser.Pe
+namespace PeNet.HeaderParser.Pe;
+
+internal class NativeStructureParsers
 {
-    internal class NativeStructureParsers
+    private readonly ImageDosHeaderParser _imageDosHeaderParser;
+    private readonly ImageNtHeadersParser? _imageNtHeadersParser;
+    private readonly IRawFile _peFile;
+    private ImageSectionHeadersParser? _imageSectionHeadersParser;
+
+    internal NativeStructureParsers(IRawFile peFile)
     {
-        private readonly IRawFile _peFile;
-        private readonly ImageDosHeaderParser _imageDosHeaderParser;
-        private readonly ImageNtHeadersParser? _imageNtHeadersParser;
-        private ImageSectionHeadersParser? _imageSectionHeadersParser;
+        _peFile = peFile;
 
-        internal NativeStructureParsers(IRawFile peFile)
+        // Init all parsers
+        _imageDosHeaderParser = InitImageDosHeaderParser();
+        _imageNtHeadersParser = InitNtHeadersParser();
+        _imageSectionHeadersParser = InitImageSectionHeadersParser();
+    }
+
+    public ImageDosHeader? ImageDosHeader => _imageDosHeaderParser.GetParserTarget();
+    public ImageNtHeaders? ImageNtHeaders => _imageNtHeadersParser?.GetParserTarget();
+    public ImageSectionHeader[]? ImageSectionHeaders => _imageSectionHeadersParser?.GetParserTarget();
+
+    private ImageSectionHeadersParser? InitImageSectionHeadersParser()
+    {
+        uint GetSecHeaderOffset()
         {
-            _peFile = peFile;
-
-            // Init all parsers
-            _imageDosHeaderParser = InitImageDosHeaderParser();
-            _imageNtHeadersParser = InitNtHeadersParser();
-            _imageSectionHeadersParser = InitImageSectionHeadersParser();
+            var x = (uint)ImageNtHeaders!.FileHeader.SizeOfOptionalHeader + 0x18;
+            return ImageDosHeader!.E_lfanew + x;
         }
 
-        public ImageDosHeader? ImageDosHeader => _imageDosHeaderParser.GetParserTarget();
-        public ImageNtHeaders? ImageNtHeaders => _imageNtHeadersParser?.GetParserTarget();
-        public ImageSectionHeader[]? ImageSectionHeaders => _imageSectionHeadersParser?.GetParserTarget();
+        if (ImageNtHeaders is null || ImageDosHeader is null)
+            return null;
 
-        private ImageSectionHeadersParser? InitImageSectionHeadersParser()
-        {
-            uint GetSecHeaderOffset()
-            {
-                var x = (uint)ImageNtHeaders!.FileHeader.SizeOfOptionalHeader + 0x18;
-                return ImageDosHeader!.E_lfanew + x;
-            }
+        return new ImageSectionHeadersParser(
+            _peFile, GetSecHeaderOffset(),
+            ImageNtHeaders.FileHeader.NumberOfSections,
+            ImageNtHeaders.OptionalHeader.ImageBase
+        );
+    }
 
-            if (ImageNtHeaders is null || ImageDosHeader is null)
-                return null;
+    internal void ReparseSectionHeaders()
+    {
+        _imageSectionHeadersParser = InitImageSectionHeadersParser();
+    }
 
-            return new ImageSectionHeadersParser(
-                _peFile, GetSecHeaderOffset(), 
-                ImageNtHeaders.FileHeader.NumberOfSections, 
-                ImageNtHeaders.OptionalHeader.ImageBase
-                );
-        }
+    private ImageNtHeadersParser? InitNtHeadersParser()
+    {
+        if (ImageDosHeader is null)
+            return null;
 
-        internal void ReparseSectionHeaders()
-        {
-            _imageSectionHeadersParser = InitImageSectionHeadersParser();
-        }
+        return new ImageNtHeadersParser(_peFile, ImageDosHeader.E_lfanew);
+    }
 
-        private ImageNtHeadersParser? InitNtHeadersParser()
-        {
-            if (ImageDosHeader is null)
-                return null;
-
-            return new ImageNtHeadersParser(_peFile, ImageDosHeader.E_lfanew);
-        }
-
-        private ImageDosHeaderParser InitImageDosHeaderParser()
-        {
-            return new ImageDosHeaderParser(_peFile, 0);
-        }
+    private ImageDosHeaderParser InitImageDosHeaderParser()
+    {
+        return new ImageDosHeaderParser(_peFile, 0);
     }
 }

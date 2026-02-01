@@ -1,60 +1,61 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net8</TargetFrameworks>
-    <Version>0.0.0</Version>
-    <Nullable>enable</Nullable>
-    <LangVersion>12</LangVersion>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <WarningsAsErrors>CS8600;CS8602;CS8603;CS8625;CS8618;CS8604;CS8601</WarningsAsErrors>
-    <IsDotNetFramework Condition=" '$(TargetFramework)' != 'net8'">true</IsDotNetFramework>
-    <PolySharpIncludeRuntimeSupportedAttributes>true</PolySharpIncludeRuntimeSupportedAttributes>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
+        <Version>0.0.0</Version>
+        <Nullable>enable</Nullable>
+        <LangVersion>12</LangVersion>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <WarningsAsErrors>CS8600;CS8602;CS8603;CS8625;CS8618;CS8604;CS8601</WarningsAsErrors>
+        <IsDotNetFramework Condition=" '$(TargetFramework)' != 'net8'">true</IsDotNetFramework>
+        <PolySharpIncludeRuntimeSupportedAttributes>true</PolySharpIncludeRuntimeSupportedAttributes>
+    </PropertyGroup>
 
-  <PropertyGroup
-    Condition="'$(IsDotNetFramework)' != 'true'">
-    <!-- These 4 properties can be replaced with the umbrella property IsAotCompatible=true in .NET
-    SDK 8. -->
-    <EnableAotAnalyzer>true</EnableAotAnalyzer>
-    <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
-    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
-    <IsTrimmable>true</IsTrimmable>
-  </PropertyGroup>
+    <PropertyGroup
+            Condition="'$(IsDotNetFramework)' != 'true'">
+        <!-- These 4 properties can be replaced with the umbrella property IsAotCompatible=true in .NET
+        SDK 8. -->
+        <EnableAotAnalyzer>true</EnableAotAnalyzer>
+        <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+        <IsTrimmable>true</IsTrimmable>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>PeNet.snk</AssemblyOriginatorKeyFile>
-  </PropertyGroup>
+    <PropertyGroup>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>PeNet.snk</AssemblyOriginatorKeyFile>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <Authors>Stefan Hausotte</Authors>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Description>PeNet is a Windows PE (Portable Executable) parser written in C#. It parses all PE
-      header structures for x32 and x64.</Description>
-    <Copyright>2017 @ Stefan Hausotte</Copyright>
-    <RepositoryUrl>https://github.com/secana/PeNet</RepositoryUrl>
-    <PackageTags>PE Header Portable Executable</PackageTags>
-    <PackageIconUrl>https://raw.githubusercontent.com/secana/PeNet/master/resource/icon.png</PackageIconUrl>
-    <PackageIcon>icon.png</PackageIcon>
-    <PackageProjectUrl>https://github.com/secana/PeNet</PackageProjectUrl>
-  </PropertyGroup>
+    <PropertyGroup>
+        <Authors>Stefan Hausotte</Authors>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <Description>PeNet is a Windows PE (Portable Executable) parser written in C#. It parses all PE
+            header structures for x32 and x64.
+        </Description>
+        <Copyright>2017 @ Stefan Hausotte</Copyright>
+        <RepositoryUrl>https://github.com/secana/PeNet</RepositoryUrl>
+        <PackageTags>PE Header Portable Executable</PackageTags>
+        <PackageIconUrl>https://raw.githubusercontent.com/secana/PeNet/master/resource/icon.png</PackageIconUrl>
+        <PackageIcon>icon.png</PackageIcon>
+        <PackageProjectUrl>https://github.com/secana/PeNet</PackageProjectUrl>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
-    <PackageReference Include="PeNet.Asn1" Version="2.0.2" />
-    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.1" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\resource\icon.png" Pack="true" PackagePath="\" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all"/>
+        <PackageReference Include="PeNet.Asn1" Version="2.0.2"/>
+        <PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.1"/>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="..\..\resource\icon.png" Pack="true" PackagePath="\"/>
+    </ItemGroup>
 
-  <ItemGroup Condition=" '$(IsDotNetFramework)' == 'true' ">
-    <PackageReference Include="System.Memory" Version="4.6.0" />
-    <Compile Include="NET48_Helpers.cs_">
-      <Link>NET48_Helpers.cs</Link>
-    </Compile>
-  </ItemGroup>
+    <ItemGroup Condition=" '$(IsDotNetFramework)' == 'true' ">
+        <PackageReference Include="System.Memory" Version="4.6.0"/>
+        <Compile Include="NET48_Helpers.cs_">
+            <Link>NET48_Helpers.cs</Link>
+        </Compile>
+    </ItemGroup>
 </Project>
