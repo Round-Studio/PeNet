@@ -109,7 +109,7 @@ public class ImageFileHeader : AbstractStructure
 #if NET5_0_OR_GREATER
         var values = Enum.GetValues<FileCharacteristicsType>();
 #else
-            var values = (FileCharacteristicsType[])Enum.GetValues(typeof(FileCharacteristicsType));
+        var values = (FileCharacteristicsType[])Enum.GetValues(typeof(FileCharacteristicsType));
 #endif
         foreach (var flag in values)
             if ((characteristics & flag) == flag)

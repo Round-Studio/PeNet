@@ -198,7 +198,7 @@ public class ImageCor20Header : AbstractStructure
 #if NET6_0_OR_GREATER
         var values = Enum.GetValues<ComFlagsType>();
 #else
-            var values = (ComFlagsType[])Enum.GetValues(typeof(ComFlagsType));
+        var values = (ComFlagsType[])Enum.GetValues(typeof(ComFlagsType));
 #endif
         foreach (var flag in values)
             if ((comFlags & flag) == flag)

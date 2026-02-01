@@ -151,7 +151,7 @@ public class ImageSectionHeader : AbstractStructure
 #if NET5_0_OR_GREATER
         var values = Enum.GetValues<ScnCharacteristicsType>();
 #else
-            var values = (ScnCharacteristicsType[])Enum.GetValues(typeof(ScnCharacteristicsType));
+        var values = (ScnCharacteristicsType[])Enum.GetValues(typeof(ScnCharacteristicsType));
 #endif
         foreach (var flag in values)
             if ((sectionFlags & flag) == flag)
